@@ -427,18 +427,18 @@ button[data-baseweb="tab"][aria-selected="true"] {
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
-            host=st.secrets["connections"]["mysql"]["host"],
-            user=st.secrets["connections"]["mysql"]["user"],
-            password=st.secrets["connections"]["mysql"]["password"],
-            database=st.secrets["connections"]["mysql"]["database"]
+            host=st.secrets["database"]["host"],
+            user=st.secrets["database"]["user"],
+            password=st.secrets["database"]["password"],
+            database=st.secrets["database"]["db_name"] # Using db_name from secrets
         )
         if connection.is_connected():
             return connection
     except mysql.connector.Error as err:
-        st.error(f"Database Error: {err}")
+        st.error(f"Database connection error: {err}")
         return None
-    except Exception as e:
-        st.error(f"An error occurred: {e}. Please ensure your secrets.toml file is correctly configured.")
+    except KeyError as e:
+        st.error(f"Secret key not found in secrets.toml: {e}. Please check your configuration.")
         return None
 
 # --- DATABASE FUNCTIONS ---
@@ -447,7 +447,7 @@ def create_user(username, email, password, admin_code_attempt=None):
     role = 'user' # Default role
     
     # Directly read the admin code from environment variables
-    correct_admin_code = os.environ.get("app_secrets_admin_code")
+    correct_admin_code = st.secrets["app_secrets"]["admin_code"]
     
     # If an admin code was provided and it matches the one in our settings, grant admin role
     if admin_code_attempt and correct_admin_code and admin_code_attempt == correct_admin_code:
